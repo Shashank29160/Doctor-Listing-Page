@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Listing</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+    }
+
+    .header {
+      background-color: #1a56a3;
+      padding: 15px 0;
+      width: 100%;
+    }
+
+    .search-container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 15px;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .suggestion-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background-color: white;
+      border-radius: 0 0 5px 5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      display: none;
+    }
+
+    .suggestion-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .suggestion-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    .doctor-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-right: 15px;
+      object-fit: cover;
+      background-color: #ddd;
+    }
+
+    .suggestion-doctor-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+      background-color: #ddd;
+    }
+
+    .main-container {
+      display: flex;
+      width: 90%;
+      max-width: 1200px;
+      margin: 20px auto;
+      gap: 20px;
+    }
+
+    .filter-panel {
+      flex: 0 0 250px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .filter-section {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 20px;
+    }
+
+    .filter-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .filter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .filter-header .chevron {
+      transition: transform 0.3s;
+    }
+
+    .filter-header.collapsed .chevron {
+      transform: rotate(-90deg);
+    }
+
+    .filter-content {
+      display: block;
+    }
+
+    .filter-header.collapsed + .filter-content {
+      display: none;
+    }
+
+    .filter-option {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .filter-option:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-option input {
+      margin-right: 10px;
+    }
+
+    .doctor-list {
+      flex: 1;
+    }
+
+    .doctor-card {
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .doctor-info {
+      flex: 1;
+      margin-left: 15px;
+    }
+
+    .doctor-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #1a56a3;
+    }
+
+    .doctor-title {
+      color: #777;
+      margin-bottom: 5px;
+    }
+
+    .doctor-details {
+      margin-top: 10px;
+    }
+
+    .doctor-experience, .doctor-specialty, .doctor-location, .doctor-languages {
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .doctor-location {
+      display: flex;
+      align-items: center;
+    }
+
+    .doctor-location-icon {
+      margin-right: 5px;
+      color: #777;
+    }
+
+    .doctor-fee-section {
+      text-align: right;
+      min-width: 150px;
+    }
+
+    .doctor-fee {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1a56a3;
+      margin-bottom: 10px;
+    }
+
+    .book-btn {
+      background-color: white;
+      border: 1px solid #1a56a3;
+      color: #1a56a3;
+      padding: 8px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s;
+    }
+
+    .book-btn:hover {
+      background-color: #1a56a3;
+      color: white;
+    }
+
+    .clinic-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .clinic-icon {
+      margin-right: 5px;
+      color: #777;
+    }
+
+    .clear-all {
+      color: #1a56a3;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 30px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .consultation-tags {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      background-color: #e6f2ff;
+      color: #1a56a3;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .tag-icon {
+      margin-right: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+
+      .filter-panel {
+        flex: none;
+        width: 100%;
+      }
+      
+      .doctor-card {
+        flex-direction: column;
+      }
+      
+      .doctor-fee-section {
+        width: 100%;
+        text-align: left;
+        margin-top: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="search-container">
+      <input type="text" class="search-input" placeholder="Search Symptoms, Doctors, Specialists, Clinics" data-testid="autocomplete-input">
+      <div class="suggestion-dropdown" id="suggestionDropdown"></div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="filter-panel">
+      <div class="filter-section">
+        <div class="filter-header" data-testid="filter-header-sort">
+          <span>Sort by</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="filter-content">
+          <div class="filter-option">
+            <input type="radio" id="sort-price" name="sort" value="fees" data-testid="sort-fees">
+            <label for="sort-price">Price: Low-High</label>
+          </div>
+          <div class="filter-option">
+            <input type="radio" id="sort-experience" name="sort" value="experience" data-testid="sort-experience">
+            <label for="sort-experience">Experience - Most Experience first</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-header" data-testid="filter-header-moc">
+          <span>Mode of consultation</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="filter-content">
+          <div class="filter-option">
+            <input type="radio" id="video-consult" name="consultation" value="video" data-testid="filter-video-consult">
+            <label for="video-consult">Video Consultation</label>
+          </div>
+          <div class="filter-option">
+            <input type="radio" id="in-clinic" name="consultation" value="clinic" data-testid="filter-in-clinic">
+            <label for="in-clinic">In-clinic Consultation</label>
+          </div>
+          <div class="filter-option">
+            <input type="radio" id="all-consultation" name="consultation" value="all" checked>
+            <label for="all-consultation">All</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-header" data-testid="filter-header-speciality">
+          <span>Specialities</span>
+          <div>
+            <a class="clear-all" id="clearFilters">Clear All</a>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="filter-content" id="specialtyFilters">
+          <!-- Specialty filters will be dynamically generated here -->
+        </div>
+      </div>
+    </div>
+
+    <div class="doctor-list" id="doctorList">
+      <!-- Doctor cards will be dynamically generated here -->
+      <div class="no-results">Loading doctors...</div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let allDoctors = [];
+    let filteredDoctors = [];
+    const specialties = new Set();
+
+    // Function to fetch doctors data
+    async function fetchDoctors() {
+      try {
+        // First try the API URL provided in the sample data
+        const response = await fetch('https://srijandubey.github.io/campus-api-mock/SRM-C1-25.json');
+        
+        if (!response.ok) {
+          throw new Error('API not available');
+        }
+        
+        const data = await response.json();
+        
+        // Process the data and map it to a consistent format
+        allDoctors = data.map(doctor => {
+          return {
+            id: doctor.id || '',
+            name: doctor.name || '',
+            image: doctor.photo || '',
+            qualification: '', // Not provided in sample data
+            specialty: doctor.specialities ? doctor.specialities.map(spec => spec.name) : [],
+            experience: doctor.experience ? doctor.experience.replace('Years of experience', '') : '',
+            fee: doctor.fees ? doctor.fees.replace('₹ ', '') : '',
+            consultationMode: [
+              ...(doctor.video_consult ? ['Video Consult'] : []),
+              ...(doctor.in_clinic ? ['In Clinic'] : [])
+            ],
+            clinicInfo: {
+              name: doctor.clinic ? doctor.clinic.name : '',
+              location: doctor.clinic && doctor.clinic.address ? 
+                `${doctor.clinic.address.locality}, ${doctor.clinic.address.city}` : ''
+            },
+            languages: doctor.languages || []
+          };
+        });
+        
+        // If no doctors were loaded (empty array), use the sample data
+        if (allDoctors.length === 0) {
+          throw new Error('No doctors found in API');
+        }
+        
+        // Extract all unique specialties
+        allDoctors.forEach(doctor => {
+          if (doctor.specialty && Array.isArray(doctor.specialty)) {
+            doctor.specialty.forEach(spec => specialties.add(spec));
+          }
+        });
+
+        generateSpecialtyFilters();
+        applyFiltersFromURL();
+        renderDoctors(allDoctors);
+      } catch (error) {
+        console.error('Error fetching doctors:', error);
+        
+        // Use the sample data provided as a fallback
+        const sampleDoctors = [
+          {
+            id: "111418",
+            name: "Dr. Kshitija Jagdale",
+            image: "https://doctorlistingingestionpr.azureedge.net/539482078762581145_5a00f31266ed11efbae40ada1afa5198_ProfilePic_crop%20pic.jpg",
+            qualification: "BDS",
+            specialty: ["Dentist"],
+            experience: "13",
+            fee: "500",
+            consultationMode: ["Video Consult", "In Clinic"],
+            clinicInfo: {
+              name: "The Dent Inn Advanced Dental Clinic",
+              location: "Wanowrie, Pune"
+            },
+            languages: ["English", "हिन्दी", "मराठी"]
+          },
+          {
+            id: "131682",
+            name: "Dr. Chhaya Vora",
+            image: "https://doctorlistingingestionpr.azureedge.net/86682006799921180_c2227daee53711eea656ba7c2485ed7e_ProfilePic_IMG-20220927-WA0006.jpg",
+            qualification: "MBBS",
+            specialty: ["Gynaecologist and Obstetrician"],
+            experience: "39",
+            fee: "400",
+            consultationMode: ["In Clinic"],
+            clinicInfo: {
+              name: "Dr. Chaya Vora",
+              location: "Hadapsar, Pune"
+            },
+            languages: ["English", "हिन्दी", "मराठी"]
+          },
+          {
+            id: "68593",
+            name: "Dr. Murtuza Agashiwala",
+            image: "https://doctorlistingingestionpr.azureedge.net/372117306642682922_abb27766e52f11ee9680ba7c2485ed7e_ProfilePic_IMG-20211013-WA0001.jpg",
+            qualification: "BDS",
+            specialty: ["Dentist"],
+            experience: "19",
+            fee: "250",
+            consultationMode: ["In Clinic"],
+            clinicInfo: {
+              name: "Dr Murtaza M. Agashiwala's Clinic",
+              location: "Wanowrie, Pune"
+            },
+            languages: ["English", "हिन्दी", "मराठी"]
+          },
+          {
+            id: "110857",
+            name: "Dr. Khushi Patel",
+            image: "https://doctorlistingingestionpr.azureedge.net/53155314380258887_be1d0c2675a411ef98f1b60948eee953_ProfilePic_Khushi%20Patel%20PIC.jpg",
+            qualification: "BDS",
+            specialty: ["Dentist"],
+            experience: "31",
+            fee: "300",
+            consultationMode: ["Video Consult"],
+            clinicInfo: {
+              name: "Dr Khushi's Dental Planet",
+              location: "Wanowrie, Pune"
+            },
+            languages: ["English", "ગુજરાતી", "हिन्दी", "मराठी"]
+          },
+          {
+            id: "101448",
+            name: "Dr. Mrinal Parikh",
+            image: "https://doctorlistingingestionpr.azureedge.net/44170435793258358_bb1c211050b011ef9196a6bb5f4610d0_ProfilePic_Dr%20Mrinal%20Pic.jpg",
+            qualification: "BHMS",
+            specialty: ["Homeopath"],
+            experience: "8",
+            fee: "650",
+            consultationMode: ["In Clinic"],
+            clinicInfo: {
+              name: "Mrinal Homeopathic Clinic",
+              location: "Wanowrie, Pune"
+            },
+            languages: ["English", "ગુજરાતી", "हिन्दी", "मराठी"]
+          }
+        ];
+        
+        allDoctors = sampleDoctors;
+        
+        // Extract all unique specialties
+        allDoctors.forEach(doctor => {
+          if (doctor.specialty && Array.isArray(doctor.specialty)) {
+            doctor.specialty.forEach(spec => specialties.add(spec));
+          }
+        });
+
+        generateSpecialtyFilters();
+        applyFiltersFromURL();
+        renderDoctors(allDoctors);
+      }
+    }
+
+    // Generate specialty filter checkboxes
+    function generateSpecialtyFilters() {
+      const specialtiesContainer = document.getElementById('specialtyFilters');
+      const sortedSpecialties = Array.from(specialties).sort();
+
+      sortedSpecialties.forEach(specialty => {
+        const testId = `filter-specialty-${specialty.replace(/\s+/g, '-').replace('/', '-').toLowerCase()}`;
+        const filterOption = document.createElement('div');
+        filterOption.className = 'filter-option';
+        filterOption.innerHTML = `
+          <input type="checkbox" id="${specialty}" name="specialty" value="${specialty}" data-testid="${testId}">
+          <label for="${specialty}">${specialty}</label>
+        `;
+        specialtiesContainer.appendChild(filterOption);
+      });
+
+      // Add event listeners to specialty checkboxes
+      document.querySelectorAll('input[name="specialty"]').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          applyFilters();
+        });
+      });
+    }
+
+    // Function to render doctors
+    function renderDoctors(doctors) {
+      const doctorListContainer = document.getElementById('doctorList');
+      doctorListContainer.innerHTML = '';
+
+      if (doctors.length === 0) {
+        doctorListContainer.innerHTML = `
+          <div class="no-results">No doctors match your search criteria.</div>
+        `;
+        return;
+      }
+
+      doctors.forEach(doctor => {
+        const doctorCard = document.createElement('div');
+        doctorCard.className = 'doctor-card';
+        doctorCard.setAttribute('data-testid', 'doctor-card');
+        
+        // Prepare specialty display text
+        const specialtyText = Array.isArray(doctor.specialty) 
+          ? doctor.specialty.join(', ')
+          : doctor.specialty || 'General Physician';
+        
+        // Create consultation mode tags
+        const consultationTags = doctor.consultationMode && doctor.consultationMode.length > 0 
+          ? `<div class="consultation-tags">
+              ${doctor.consultationMode.includes('Video Consult') 
+                ? `<span class="tag"><span class="tag-icon">📹</span> Video Consult</span>` 
+                : ''}
+              ${doctor.consultationMode.includes('In Clinic') 
+                ? `<span class="tag"><span class="tag-icon">🏥</span> In Clinic</span>` 
+                : ''}
+            </div>`
+          : '';
+        
+        // Languages display
+        const languagesText = doctor.languages && doctor.languages.length > 0
+          ? `<div class="doctor-languages">Speaks: ${doctor.languages.join(', ')}</div>`
+          : '';
+        
+        // Handle the doctor image
+        const doctorImageSrc = doctor.image && doctor.image.trim() !== '' 
+          ? doctor.image 
+          : '/api/placeholder/80/80';
+        
+        // Remove any existing "Dr." prefix to avoid duplication
+        const nameWithoutPrefix = doctor.name.replace(/^Dr\.?\s*/i, '');
+        
+        doctorCard.innerHTML = `
+          <div class="doctor-image-container">
+            <img src="${doctorImageSrc}" alt="Dr. ${nameWithoutPrefix}" class="doctor-image" onerror="this.src='/api/placeholder/80/80'">
+          </div>
+          <div class="doctor-info">
+            <h3 class="doctor-name" data-testid="doctor-name">Dr. ${nameWithoutPrefix}</h3>
+            <div class="doctor-title">${doctor.qualification || 'MBBS'}</div>
+            <div class="doctor-specialty" data-testid="doctor-specialty">${specialtyText}</div>
+            <div class="doctor-experience" data-testid="doctor-experience">${doctor.experience} years exp.</div>
+            ${languagesText}
+            ${consultationTags}
+            
+            <div class="clinic-info">
+              <span class="clinic-icon">🏥</span>
+              ${doctor.clinicInfo.name}
+            </div>
+            
+            <div class="doctor-location">
+              <span class="doctor-location-icon">📍</span>
+              ${doctor.clinicInfo.location || 'Local Area'}
+            </div>
+          </div>
+          <div class="doctor-fee-section">
+            <div class="doctor-fee" data-testid="doctor-fee">₹ ${doctor.fee}</div>
+            <button class="book-btn">Book Appointment</button>
+          </div>
+        `;
+        
+        doctorListContainer.appendChild(doctorCard);
+      });
+    }
+
+    // Autocomplete search functionality
+    const searchInput = document.querySelector('[data-testid="autocomplete-input"]');
+    const suggestionDropdown = document.getElementById('suggestionDropdown');
+
+    searchInput.addEventListener('input', handleSearchInput);
+    
+    function handleSearchInput() {
+      const query = searchInput.value.toLowerCase().trim();
+      suggestionDropdown.innerHTML = '';
+      
+      if (query.length === 0) {
+        suggestionDropdown.style.display = 'none';
+        return;
+      }
+      
+      const matches = allDoctors
+        .filter(doctor => doctor.name.toLowerCase().includes(query))
+        .slice(0, 3);  // Top 3 matches
+      
+      if (matches.length > 0) {
+        suggestionDropdown.style.display = 'block';
+        
+        matches.forEach(doctor => {
+          const suggestionItem = document.createElement('div');
+          suggestionItem.className = 'suggestion-item';
+          suggestionItem.setAttribute('data-testid', 'suggestion-item');
+          
+          // Remove any existing "Dr." prefix to avoid duplication
+          const nameWithoutPrefix = doctor.name.replace(/^Dr\.?\s*/i, '');
+          
+          // Handle the doctor image
+          const doctorImageSrc = doctor.image && doctor.image.trim() !== '' 
+            ? doctor.image 
+            : '/api/placeholder/40/40';
+          
+          suggestionItem.innerHTML = `
+            <img src="${doctorImageSrc}" alt="Dr. ${nameWithoutPrefix}" class="suggestion-doctor-image" onerror="this.src='/api/placeholder/40/40'">
+            <div>
+              <div>Dr. ${nameWithoutPrefix}</div>
+              <div style="font-size: 12px; color: #777;">${doctor.qualification || 'MBBS'}</div>
+            </div>
+          `;
+          
+          suggestionItem.addEventListener('click', () => {
+            searchInput.value = doctor.name;
+            suggestionDropdown.style.display = 'none';
+            applyFilters();
+          });
+          
+          suggestionDropdown.appendChild(suggestionItem);
+        });
+      } else {
+        suggestionDropdown.style.display = 'none';
+      }
+    }
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (event) => {
+      if (!searchInput.contains(event.target) && !suggestionDropdown.contains(event.target)) {
+        suggestionDropdown.style.display = 'none';
+      }
+    });
+
+    // Handle search submit
+    searchInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        suggestionDropdown.style.display = 'none';
+        applyFilters();
+      }
+    });
+
+    // Filter section toggle functionality
+    document.querySelectorAll('.filter-header').forEach(header => {
+      header.addEventListener('click', () => {
+        header.classList.toggle('collapsed');
+      });
+    });
+
+    // Add event listeners to consultation mode radio buttons
+    document.querySelectorAll('input[name="consultation"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        applyFilters();
+      });
+    });
+
+    // Add event listeners to sort radio buttons
+    document.querySelectorAll('input[name="sort"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        applyFilters();
+      });
+    });
+
+    // Clear all filters
+    document.getElementById('clearFilters').addEventListener('click', () => {
+      // Clear checkboxes
+      document.querySelectorAll('input[name="specialty"]').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      
+      // Reset consultation mode
+      document.getElementById('all-consultation').checked = true;
+      
+      // Reset sort
+      document.querySelectorAll('input[name="sort"]').forEach(radio => {
+        radio.checked = false;
+      });
+      
+      // Clear search
+      searchInput.value = '';
+      
+      // Apply filters (which will reset to show all)
+      applyFilters();
+    });
+
+    // Function to extract numeric experience value
+    function extractExperienceValue(experienceStr) {
+      if (!experienceStr) return 0;
+      const match = experienceStr.match(/\d+/);
+      return match ? parseInt(match[0]) : 0;
+    }
+
+    // Apply filters function
+    function applyFilters() {
+      // Get search query
+      const searchQuery = searchInput.value.toLowerCase().trim();
+      
+      // Get selected consultation mode
+      const selectedMode = document.querySelector('input[name="consultation"]:checked').value;
+      
+      // Get selected specialties
+      const selectedSpecialties = Array.from(
+        document.querySelectorAll('input[name="specialty"]:checked')
+      ).map(checkbox => checkbox.value);
+      
+      // Get sort option
+      const sortOption = document.querySelector('input[name="sort"]:checked')?.value;
+      
+      // Filter doctors based on criteria
+      filteredDoctors = allDoctors.filter(doctor => {
+        // Filter by search
+        const matchesSearch = searchQuery.length === 0 || 
+          doctor.name.toLowerCase().includes(searchQuery);
+        
+        // Filter by consultation mode
+        const matchesMode = selectedMode === 'all' || 
+          (selectedMode === 'video' && doctor.consultationMode?.includes('Video Consult')) ||
+          (selectedMode === 'clinic' && doctor.consultationMode?.includes('In Clinic'));
+        
+        // Filter by specialties
+        const matchesSpecialty = selectedSpecialties.length === 0 || 
+          (doctor.specialty && selectedSpecialties.some(spec => doctor.specialty.includes(spec)));
+        
+        return matchesSearch && matchesMode && matchesSpecialty;
+      });
+      
+      // Sort doctors if a sort option is selected
+      if (sortOption) {
+        filteredDoctors.sort((a, b) => {
+          if (sortOption === 'fees') {
+            return (parseInt(a.fee) || 0) - (parseInt(b.fee) || 0); // Ascending
+          } else if (sortOption === 'experience') {
+            const expA = extractExperienceValue(a.experience);
+            const expB = extractExperienceValue(b.experience);
+            return expB - expA; // Descending
+          }
+          return 0;
+        });
+      }
+      
+      // Update URL with query parameters
+      updateURLWithFilters(searchQuery, selectedMode, selectedSpecialties, sortOption);
+      
+      // Render filtered doctors
+      renderDoctors(filteredDoctors);
+    }
+
+    // Update URL with filter parameters
+    function updateURLWithFilters(searchQuery, consultationMode, specialties, sortOption) {
+      const url = new URL(window.location);
+      
+      // Update search query parameter
+      if (searchQuery) {
+        url.searchParams.set('search', searchQuery);
+      } else {
+        url.searchParams.delete('search');
+      }
+      
+      // Update consultation mode parameter
+      if (consultationMode && consultationMode !== 'all') {
+        url.searchParams.set('mode', consultationMode);
+      } else {
+        url.searchParams.delete('mode');
+      }
+      
+      // Update specialties parameter
+      if (specialties && specialties.length > 0) {
+        url.searchParams.set('specialties', specialties.join(','));
+      } else {
+        url.searchParams.delete('specialties');
+      }
+      
+      // Update sort parameter
+      if (sortOption) {
+        url.searchParams.set('sort', sortOption);
+      } else {
+        url.searchParams.delete('sort');
+      }
+      
+      // Update URL without reloading the page
+      window.history.pushState({}, '', url);
+    }
+
+    // Apply filters from URL when page loads
+    function applyFiltersFromURL() {
+      const url = new URL(window.location);
+      
+      // Get search query from URL
+      const searchQuery = url.searchParams.get('search');
+      if (searchQuery) {
+        searchInput.value = searchQuery;
+      }
+      
+      // Get consultation mode from URL
+      const consultationMode = url.searchParams.get('mode');
+      if (consultationMode) {
+        const radioButton = document.querySelector(`input[name="consultation"][value="${consultationMode}"]`);
+        if (radioButton) {
+          radioButton.checked = true;
+        }
+      }
+      
+      // Get specialties from URL
+      const specialtiesParam = url.searchParams.get('specialties');
+      if (specialtiesParam) {
+        const selectedSpecialties = specialtiesParam.split(',');
+        selectedSpecialties.forEach(specialty => {
+          const checkbox = document.querySelector(`input[name="specialty"][value="${specialty}"]`);
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+      }
+      
+      // Get sort option from URL
+      const sortOption = url.searchParams.get('sort');
+      if (sortOption) {
+        const radioButton = document.querySelector(`input[name="sort"][value="${sortOption}"]`);
+        if (radioButton) {
+          radioButton.checked = true;
+        }
+      }
+      
+      // Apply filters
+      applyFilters();
+    }
+
+    // Handle browser back/forward navigation
+    window.addEventListener('popstate', () => {
+      applyFiltersFromURL();
+    });
+
+    // Initialize the page
+    fetchDoctors();
+  </script>
+</body>
+</html>
